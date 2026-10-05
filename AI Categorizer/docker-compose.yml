@@ -1,0 +1,17 @@
+services:
+  ai-categorizer:
+    build: .
+
+    container_name: ai-categorizer
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./uploads:/app/uploads
+      - ./complaints.db:/app/complaints.db
+
+    restart: unless-stopped

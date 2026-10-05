@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AI Civic Platform - Admin Live Center for real-time incident reporting, management, and civic duty tracking.">
+<meta name="theme-color" content="#4f46e5">
+<title>AI Civic Platform | Admin Live Center</title>
+
+<!-- Preconnect for performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<!-- Deferred script loading for better render performance -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --font-main: 'Plus Jakarta Sans', sans-serif;
+        
+        /* Light Theme Colors */
+        --bg-color: #f4f7fb;
+        --text-color: #0f172a;
+        --text-muted: #475569;
+        
+        --glass-bg: rgba(255, 255, 255, 0.55); 
+        --glass-border: rgba(255, 255, 255, 0.8);
+        --glass-shadow: rgba(0, 0, 0, 0.1);
+        --card-glow: rgba(255, 255, 255, 0.4);
+        
+        --accent-color: #4f46e5;
+        --accent-glow: rgba(79, 70, 229, 0.4);
+        
+        --pending-color: #d97706; 
+        --pending-bg: rgba(245, 158, 11, 0.15);
+        --ongoing-color: #2563eb; 
+        --ongoing-bg: rgba(59, 130, 246, 0.15);
+        --solved-color: #059669; 
+        --solved-bg: rgba(16, 185, 129, 0.15);
+        
+        /* Vibrant Background Colors */
+        --blob-pink: #ff7eb3;
+        --blob-blue: #4facfe;
+        --blob-green: #43e97b;
+        
+        --input-bg: rgba(255, 255, 255, 0.6);
+        --input-focus: rgba(255, 255, 255, 0.9);
+        --card-border-radius: 28px;
+        --card-bg-hover: rgba(255, 255, 255, 0.75);
+
+        /* Screen Fade Light */
+        --fade-color: #ffffff;
+    }
+
+    body.dark-theme {
+        /* Dark Theme Colors */
+        --bg-color: #0b0f19;
+        --text-color: #f8fafc;
+        --text-muted: #cbd5e1;
+        
+        --glass-bg: rgba(17, 24, 39, 0.65);
+        --glass-border: rgba(255, 255, 255, 0.15);
+        --glass-shadow: rgba(0, 0, 0, 0.5);
+        --card-glow: rgba(99, 102, 241, 0.05);
+        
+        --accent-color: #818cf8;
+        --accent-glow: rgba(129, 140, 248, 0.35);
+        
+        --pending-color: #fbbf24;
+        --pending-bg: rgba(251, 191, 36, 0.15);
+        --ongoing-color: #60a5fa;
+        --ongoing-bg: rgba(96, 165, 250, 0.15);
+        --solved-color: #34d399;
+        --solved-bg: rgba(52, 211, 153, 0.15);
+        
+        /* Deepened Background Colors for Dark Mode */
+        --blob-pink: #9d174d;
+        --blob-blue: #1e3a8a;
+        --blob-green: #064e3b;
+        
+        --input-bg: rgba(0, 0, 0, 0.4);
+        --input-focus: rgba(0, 0, 0, 0.7);
+        --card-bg-hover: rgba(31, 41, 55, 0.85);
+
+        /* Screen Fade Dark */
+        --fade-color: #000000;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: var(--font-main);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow-x: hidden;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Screen Fade Overlays */
+    .screen-fade-top, .screen-fade-bottom {
+        position: fixed;
+        left: 0;
+        width: 100vw;
+        pointer-events: none;
+        z-index: 990; /* Placed safely behind the header (1000) and toast (99999) */
+        transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .screen-fade-top {
+        top: 0;
+        height: 120px;
+        background: linear-gradient(to bottom, var(--fade-color) 0%, transparent 100%);
+    }
+    .screen-fade-bottom {
+        bottom: 0;
+        height: 150px;
+        background: linear-gradient(to top, var(--fade-color) 0%, transparent 100%);
+    }
+
+    .bg-blobs {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        overflow: hidden;
+        pointer-events: none;
+        background: var(--bg-color);
+    }
+
+    .blob {
+        position: absolute;
+        filter: blur(140px);
+        opacity: 0.85;
+        border-radius: 50%;
+        will-change: transform;
+    }
+
+    .blob-pink {
+        top: -20%; left: -10%;
+        width: 80vw; height: 80vw;
+        background: var(--blob-pink);
+        animation: movePink 45s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .blob-blue {
+        bottom: -20%; right: -20%;
+        width: 90vw; height: 90vw;
+        background: var(--blob-blue);
+        animation: moveBlue 55s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .blob-green {
+        top: 20%; left: 30%;
+        width: 70vw; height: 70vw;
+        background: var(--blob-green);
+        animation: moveGreen 60s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes movePink {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30vw, 20vh) scale(1.3); }
+        66% { transform: translate(-10vw, 40vh) scale(0.9); }
+        100% { transform: translate(15vw, -15vh) scale(1.1); }
+    }
+
+    @keyframes moveBlue {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-35vw, -25vh) scale(1.2); }
+        66% { transform: translate(25vw, -10vh) scale(0.85); }
+        100% { transform: translate(-10vw, 15vh) scale(1.15); }
+    }
+
+    @keyframes moveGreen {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(25vw, -35vh) scale(1.4); }
+        66% { transform: translate(-30vw, 25vh) scale(0.9); }
+        100% { transform: translate(10vw, 10vh) scale(1.2); }
+    }
+
+    .liquid-glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px) saturate(150%);
+        -webkit-backdrop-filter: blur(24px) saturate(150%);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 10px 40px 0 var(--glass-shadow), inset 0 1px 0 var(--card-glow);
+        border-radius: var(--card-border-radius);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .liquid-glass:hover {
+        box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.15);
+        background: var(--card-bg-hover);
+        transform: translateY(-2px);
+    }
+    
+    body.dark-theme .liquid-glass:hover { 
+        box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.6); 
+    }
+
+    header {
+        position: sticky; top: 15px; z-index: 1000; margin: 15px auto; max-width: 1400px; width: calc(100% - 30px);
+    }
+    
+    .navbar {
+        display: flex; justify-content: space-between; align-items: center; 
+        padding: 10px 24px; border-radius: 40px;
+    }
+    
+    .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; }
+    
+    /* Updated Logo styles for image */
+    .logo-img {
+        width: 42px; height: 42px; border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 12px var(--accent-glow);
+        border: 2px solid var(--glass-border);
+        background-color: var(--input-bg);
+    }
+    
+    .logo-text h2 { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+    .logo-text h2 span { color: var(--accent-color); }
+    .logo-text p { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .action-group { display: flex; align-items: center; gap: 15px; }
+    
+    .theme-toggle, .logout-btn {
+        background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-color); cursor: pointer;
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        font-size: 0.95rem; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s, color 0.3s, border-color 0.3s;
+        position: relative; z-index: 10000;
+    }
+    .theme-toggle:hover { transform: scale(1.1) rotate(15deg); background: var(--input-focus); }
+    
+    .logout-btn:hover {
+        transform: scale(1.1); 
+        background: rgba(239, 68, 68, 0.1); 
+        color: #ef4444; 
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    main {
+        flex: 1; max-width: 1400px; width: calc(100% - 30px); margin: 20px auto; display: flex; flex-direction: column; gap: 30px; padding-bottom: 120px;
+    }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .stat-card { padding: 24px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; }
+    .stat-card::after {
+        content: ''; position: absolute; bottom: -20px; right: -20px; width: 100px; height: 100px; border-radius: 50%;
+        background: radial-gradient(circle, var(--accent-glow) 0%, transparent 80%); pointer-events: none; opacity: 0.5;
+    }
+    .stat-info h2 { font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-bottom: 5px; letter-spacing: -1px; }
+    .stat-info p { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-icon { width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; background: var(--input-bg); border: 1px solid var(--glass-border); }
+
+    .stat-pending { border-left: 4px solid var(--pending-color); }
+    .stat-ongoing { border-left: 4px solid var(--ongoing-color); }
+    .stat-solved { border-left: 4px solid var(--solved-color); }
+    .stat-pending .stat-icon { color: var(--pending-color); }
+    .stat-ongoing .stat-icon { color: var(--ongoing-color); }
+    .stat-solved .stat-icon { color: var(--solved-color); }
+
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    .chart-card { padding: 24px; display: flex; flex-direction: column; }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .chart-header h3 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; }
+    .live-feed-badge { background: rgba(245, 158, 11, 0.15); color: #d97706; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; }
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+    .control-bar.liquid-glass { 
+        padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; border-radius: 100px; 
+    }
+    .search-box { position: relative; flex: 1; min-width: 300px; }
+    .search-box i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; }
+    .search-box input { 
+        width: 100%; padding: 14px 20px 14px 52px; border-radius: 50px; border: 1px solid var(--glass-border); 
+        background: var(--input-bg); color: var(--text-color); font-family: inherit; font-size: 0.92rem; outline: none; 
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .search-box input:focus { border-color: var(--accent-color); background: var(--input-focus); box-shadow: 0 0 0 4px var(--accent-glow); }
+
+    .filter-tabs { display: flex; gap: 8px; background: var(--input-bg); padding: 6px; border-radius: 50px; border: 1px solid var(--glass-border); backdrop-filter: blur(12px); }
+    .filter-btn {
+        background: transparent; border: none; color: var(--text-muted); padding: 10px 20px; font-family: inherit;
+        font-weight: 700; font-size: 0.88rem; border-radius: 50px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px;
+    }
+    .filter-btn.active, .filter-btn:focus-visible { background: var(--accent-color); color: #fff; box-shadow: 0 4px 12px var(--accent-glow); outline: none; }
+
+    .table-panel { padding: 24px; overflow: visible; }
+    .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .table-header h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.3px; }
+    
+    .table-container { width: 100%; border-radius: 16px; border: 1px solid var(--glass-border); overflow-x: auto; min-height: 250px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; min-width: 1000px; }
+    th { background: var(--input-bg); padding: 16px 20px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.8px; border-bottom: 1px solid var(--glass-border); }
+    td { padding: 16px 20px; border-bottom: 1px solid var(--glass-border); color: var(--text-color); font-weight: 500; }
+    tr:last-child td { border-bottom: none; }
+    
+    tr { transition: background 0.3s; position: relative; z-index: 1; cursor: pointer; }
+    tr:hover { background: rgba(255, 255, 255, 0.2); }
+    body.dark-theme tr:hover { background: rgba(0, 0, 0, 0.25); }
+    tr:has(.action-dropdown.show) { z-index: 50; }
+
+    @keyframes rowDispatchFlash {
+        0% { background: rgba(99, 102, 241, 0.4); transform: scale(0.99); }
+        50% { background: rgba(99, 102, 241, 0.15); }
+        100% { background: transparent; transform: scale(1); }
+    }
+    .row-incoming-dispatch { animation: rowDispatchFlash 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    .complaint-id { font-family: 'Courier New', Courier, monospace; font-weight: 800; color: var(--accent-color); }
+    
+    .map-cell-wrap { 
+        display: grid; 
+        grid-template-columns: 85px 44px; /* Increased tap target */
+        align-items: center; 
+        gap: 12px; 
+        cursor: default; 
+    }
+    .prio-badge { 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 4px 10px; 
+        border-radius: 10px; 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+    }
+    
+    .prio-High { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+    .prio-Medium { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+    .prio-Low { background: rgba(16, 185, 129, 0.15); color: #059669; }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; }
+    .status-pending { background: var(--pending-bg); color: var(--pending-color); }
+    .status-ongoing { background: var(--ongoing-bg); color: var(--ongoing-color); }
+    .status-solved { background: var(--solved-bg); color: var(--solved-color); }
+
+    .complaint-thumb { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--input-bg); }
+
+    .btn-map { 
+        background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--accent-color); 
+        width: 44px; height: 44px; /* Minimum 44px for accessibility touch targets */
+        border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.3s; z-index: 2; position: relative;
+    }
+    .btn-map:hover, .btn-map:focus-visible { background: var(--accent-color); color: #fff; transform: translateY(-2px); box-shadow: 0 4px 12px var(--accent-glow); outline: none;}
+
+    .action-cell { position: relative; overflow: visible; cursor: default; }
+    .btn-action-icon {
+        background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-color); width: 44px; height: 44px; border-radius: 50px;
+        display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; z-index: 2; position: relative;
+    }
+    .btn-action-icon:hover, .btn-action-icon:focus-visible { background: var(--accent-color); color: #fff; border-color: var(--accent-color); transform: translateY(-1px); outline: none; }
+    
+    .action-cell-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center;}
+    
+    .action-dropdown {
+        position: absolute; right: calc(100% + 12px); top: 50%; z-index: 100;
+        display: flex; flex-direction: column; gap: 8px;
+        pointer-events: none; padding: 10px; border-radius: 24px;
+        background: var(--glass-bg); backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%);
+        border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        opacity: 0; transform: translateY(-50%) translateX(20px) scale(0.9);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    body.dark-theme .action-dropdown { box-shadow: 0 10px 50px rgba(0,0,0,0.8); }
+    .action-dropdown.show { pointer-events: auto; opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+    
+    .action-dropdown button {
+        background: var(--bg-color); border: 1px solid var(--glass-border);
+        padding: 12px 18px; border-radius: 50px; color: var(--text-color); font-family: inherit; font-size: 0.85rem; font-weight: 700;
+        cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.3s ease; white-space: nowrap;
+    }
+    .action-dropdown button:hover, .action-dropdown button:focus-visible { transform: scale(1.05); outline: none; }
+    .action-dropdown button.opt-pending { color: var(--pending-color); }
+    .action-dropdown button.opt-ongoing { color: var(--ongoing-color); }
+    .action-dropdown button.opt-solved { color: var(--solved-color); }
+    .action-dropdown button.opt-delete { color: #dc2626; border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); }
+    
+    .action-dropdown button.opt-pending:hover { background: var(--pending-bg); border-color: rgba(245, 158, 11, 0.3); }
+    .action-dropdown button.opt-ongoing:hover { background: var(--ongoing-bg); border-color: rgba(59, 130, 246, 0.3); }
+    .action-dropdown button.opt-solved:hover { background: var(--solved-bg); border-color: rgba(16, 185, 129, 0.3); }
+    .action-dropdown button.opt-delete:hover { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.5); }
+
+    .auth-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
+        z-index: 100000; display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.4s ease; padding: 20px;
+    }
+    body.dark-theme .auth-modal-overlay { background: rgba(0, 0, 0, 0.5); }
+    
+    .entry-blocker-overlay {
+        background: rgba(255, 255, 255, 0.02); 
+        backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    }
+    body.dark-theme .entry-blocker-overlay { background: rgba(0, 0, 0, 0.02); }
+
+    .auth-modal-overlay.show { opacity: 1; pointer-events: auto; }
+    
+    .auth-modal-box {
+        width: 100%; max-width: 420px; padding: 40px 32px; border-radius: 32px; background: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 20px 80px rgba(0,0,0,0.15);
+        text-align: center; transform: translateY(100px) scale(0.9); 
+        opacity: 0; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.6s ease;
+        position: relative; max-height: 90vh; overflow-y: auto;
+    }
+    body.dark-theme .auth-modal-box { background: var(--bg-color); border-color: var(--glass-border); }
+    .auth-modal-overlay.show .auth-modal-box { transform: translateY(0) scale(1); opacity: 1; }
+    
+    .auth-modal-box h3 { font-size: 1.6rem; font-weight: 800; margin-bottom: 10px; color: #0f172a; }
+    body.dark-theme .auth-modal-box h3 { color: var(--text-color); }
+    .auth-modal-box p { font-size: 0.95rem; margin-bottom: 30px; line-height: 1.4; opacity: 0.9; color: #64748b; }
+    body.dark-theme .auth-modal-box p { color: var(--text-muted); }
+    
+    .auth-modal-box .field { text-align: left; margin-bottom: 20px; }
+    .auth-modal-box .field label { color: #0f172a; margin-left: 10px; font-weight: 700; display: block; margin-bottom: 8px;}
+    body.dark-theme .auth-modal-box .field label { color: var(--text-color); }
+    
+    .auth-modal-box input {
+        color: #0f172a; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 50px; 
+        padding: 14px 20px; width: 100%; outline: none; transition: all 0.3s;
+    }
+    body.dark-theme .auth-modal-box input { color: var(--text-color); background: var(--input-bg); border-color: var(--glass-border); }
+    .auth-modal-box input::placeholder { color: #94a3b8; }
+    .auth-modal-box input:focus { background: #ffffff; border-color: var(--accent-color); box-shadow: 0 0 0 4px var(--accent-glow); }
+    body.dark-theme .auth-modal-box input:focus { background: var(--input-focus); }
+
+    .submit-btn {
+        width: 100%; padding: 15px; border-radius: 50px; border: none; font-family: inherit; font-weight: 700; font-size: 0.98rem;
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .primary-btn { background: var(--accent-color); color: #fff; box-shadow: 0 6px 20px var(--accent-glow); }
+    .primary-btn:hover, .primary-btn:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 25px var(--accent-glow); outline: none;}
+
+    .close-modal-btn { background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; transition: 0.3s; width: 44px; height: 44px;}
+    .close-modal-btn:hover, .close-modal-btn:focus-visible { color: var(--accent-color); transform: scale(1.1); outline: none;}
+    
+    .audio-player-container { margin-top: 15px; padding: 15px; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--glass-border); }
+    .audio-player-container audio { width: 100%; height: 40px; outline: none; margin-top: 10px; border-radius: 20px; }
+
+    /* Accessible Toast */
+    .toast-container {
+        position: fixed; top: 90px; right: 30px; z-index: 99999;
+        display: flex; flex-direction: column; gap: 12px; align-items: flex-end; pointer-events: none;
+    }
+    .toast {
+        background: var(--accent-color); padding: 16px 28px; border-radius: 16px; 
+        color: #ffffff; box-shadow: 0 15px 40px var(--accent-glow); display: flex; align-items: center; gap: 14px; 
+        transform: translateX(50px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-weight: 700;
+    }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast.toast-alert { background: #ef4444; box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4); }
+
+    .live-status-pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 30px;
+        background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #059669; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    body.dark-theme .live-status-pill { color: #10b981; }
+    
+    .live-status-pill.offline { background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--accent-color); }
+    .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulseLight 1.8s infinite; }
+    .live-status-pill.offline .status-dot { background: var(--accent-color); }
+    @keyframes pulseLight { 0% { transform: scale(0.9); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 1; } }
+
+    .floating-pill-bar {
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100001; display: flex;
+        align-items: center; padding: 8px; gap: 6px; height: 65px; border-radius: 65px; width: max-content; max-width: 90vw;
+        background: var(--glass-bg); backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%);
+        border: 1px solid var(--glass-border); box-shadow: 0 15px 40px 0 var(--glass-shadow), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .floating-pill-bar:hover { bottom: 34px; box-shadow: 0 25px 50px 0 rgba(0, 0, 0, 0.2); }
+    body.dark-theme .floating-pill-bar:hover { box-shadow: 0 25px 50px 0 rgba(0, 0, 0, 0.8); }
+    .pill-item {
+        display: flex; align-items: center; justify-content: center; gap: 10px; height: 100%; padding: 0 28px;
+        border-radius: 50px; text-decoration: none; color: var(--text-color); font-size: 0.9rem; font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .pill-item i { font-size: 1.2rem; color: var(--text-muted); transition: color 0.3s; }
+    .pill-item:hover, .pill-item:focus-visible { background: rgba(255, 255, 255, 0.2); outline: none; }
+    body.dark-theme .pill-item:hover, body.dark-theme .pill-item:focus-visible { background: rgba(255, 255, 255, 0.05); }
+    .pill-item:hover i, .pill-item:focus-visible i { color: var(--accent-color); }
+    .pill-item.active-pill { background: var(--accent-color); color: #fff !important; box-shadow: 0 4px 15px var(--accent-glow); }
+    .pill-item.active-pill i { color: #fff !important; }
+    @media (max-width: 600px) { .pill-item span { display: none; } .pill-item { padding: 0 20px; } }
+
+    .theme-switching, .theme-switching * { transition: none !important; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; display: block; }
+    ::view-transition-old(root) { z-index: 1; }
+    ::view-transition-new(root) { z-index: 2; }
+</style>
+</head>
+<body>
+
+<!-- Fade overlays -->
+<div class="screen-fade-top" aria-hidden="true"></div>
+<div class="screen-fade-bottom" aria-hidden="true"></div>
+
+<script>
+    if (localStorage.getItem('civic_theme_pref') === 'dark') {
+        document.body.classList.add('dark-theme');
+    }
+</script>
+
+<div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob-pink"></div>
+    <div class="blob blob-blue"></div>
+    <div class="blob blob-green"></div>
+</div>
+
+<header>
+    <nav class="navbar liquid-glass">
+        <a href="index.html" class="logo" aria-label="Go to Homepage">
+            <!-- Updated Logo element to use the image -->
+            <img src="image.jpg" alt="AI Civic Logo" class="logo-img">
+            
+            <div class="logo-text">
+                <h2>AI<span>Civic</span></h2>
+                <p>Live Server Sync</p>
+            </div>
+        </a>
+
+        <div class="action-group">
+            <div class="live-status-pill" id="serverStatusTag" role="status" aria-live="polite">
+                <span class="status-dot"></span> <span id="serverStatusText">Connecting...</span>
+            </div>
+            <button class="logout-btn" id="logoutBtn" aria-label="Log Out or Switch User" title="Log Out / Switch User">
+                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+            </button>
+            <button class="theme-toggle" id="themeToggleBtn" aria-label="Toggle Dark and Light Theme">
+                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<!-- ARIA live region for screen readers to hear toast announcements -->
+<div class="toast-container" id="toastContainer" aria-live="assertive" role="alert"></div>
+
+<main id="portal-admin">
+    <div class="stats-grid">
+        <div class="stat-card liquid-glass">
+            <div class="stat-info"><h2 id="totalCount">0</h2><p>Total Complaints</p></div>
+            <div class="stat-icon" aria-hidden="true"><i class="fa-solid fa-folder-open"></i></div>
+        </div>
+        <div class="stat-card liquid-glass stat-pending">
+            <div class="stat-info"><h2 id="pendingCount">0</h2><p>Pending Issues</p></div>
+            <div class="stat-icon" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        </div>
+        <div class="stat-card liquid-glass stat-ongoing">
+            <div class="stat-info"><h2 id="ongoingCount">0</h2><p>Ongoing Jobs</p></div>
+            <div class="stat-icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+        </div>
+        <div class="stat-card liquid-glass stat-solved">
+            <div class="stat-info"><h2 id="solvedCount">0</h2><p>Solved Cases</p></div>
+            <div class="stat-icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></div>
+        </div>
+    </div>
+
+    <!-- Live Graphical Charts Section -->
+    <div class="charts-grid">
+        <div class="chart-card liquid-glass">
+            <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-simple" style="color: var(--accent-color); font-size: 1.1rem;" aria-hidden="true"></i> Real-time Incident Categories</h3>
+                <span class="live-feed-badge">Live Feed</span>
+            </div>
+            <div style="position: relative; height: 280px; width: 100%;">
+                <canvas id="barChart" aria-label="Bar chart showing incident categories" role="img"></canvas>
+            </div>
+        </div>
+        <div class="chart-card liquid-glass">
+            <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-pie" style="color: var(--accent-color); font-size: 1.1rem;" aria-hidden="true"></i> Severity Analysis</h3>
+            </div>
+            <div style="position: relative; height: 280px; width: 100%; display: flex; justify-content: center;">
+                <canvas id="donutChart" aria-label="Doughnut chart showing severity levels" role="img"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-bar liquid-glass">
+        <div class="search-box">
+            <label for="searchInput" class="fa-solid fa-magnifying-glass" style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem;" aria-label="Search"></label>
+            <input type="search" id="searchInput" placeholder="Search live database by ID or details...">
+        </div>
+        <div class="filter-tabs" role="tablist">
+            <button class="filter-btn active" data-status="all" role="tab" aria-selected="true">All</button>
+            <button class="filter-btn" data-status="Pending" role="tab" aria-selected="false">Pending</button>
+            <button class="filter-btn" data-status="Ongoing" role="tab" aria-selected="false">Ongoing</button>
+            <button class="filter-btn" data-status="Solved" role="tab" aria-selected="false">Solved</button>
+        </div>
+    </div>
+
+    <div class="table-panel liquid-glass">
+        <div class="table-header">
+            <h3>Live Citizen Incidents Grid</h3>
+            <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted);" id="visibleCounter" aria-live="polite">Showing 0 complaints</span>
+        </div>
+        <div class="table-container" tabindex="0" aria-label="Scrollable Incidents Data Table">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Complaint ID</th>
+                        <th scope="col">Preview</th>
+                        <th scope="col">Reporter Name</th>
+                        <th scope="col">Phone Number</th>
+                        <th scope="col">Incident Details</th>
+                        <th scope="col">Dept Assigned</th>
+                        <th scope="col">Priority & Map</th>
+                        <th scope="col">Current Status</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="complaintTable">
+                    <!-- Real-time updates populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+
+<!-- INITIAL PAGE ENTRY ADMIN AUTHORIZATION MODAL -->
+<div id="adminEntryModal" class="auth-modal-overlay entry-blocker-overlay show" role="dialog" aria-modal="true" aria-labelledby="entryModalTitle"> 
+    <div class="auth-modal-box">
+        <h3 id="entryModalTitle"><i class="fa-solid fa-user-shield" style="color: var(--accent-color); margin-right: 8px;" aria-hidden="true"></i>Access</h3>
+        <p>Please verify your identity to enter the Live Center dashboard.</p>
+        
+        <div class="field">
+            <label for="entryUsername">Username</label>
+            <input type="text" id="entryUsername" placeholder="Enter Username" autocomplete="username">
+        </div>
+        <div class="field">
+            <label for="entryPassword">Password</label>
+            <input type="password" id="entryPassword" placeholder="Enter password" autocomplete="current-password">
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 25px; flex-direction: column;">
+            <div style="display: flex; gap: 10px;">
+                <button type="button" id="cancelEntryBtn" class="submit-btn" style="background: rgba(148, 163, 184, 0.2); color: var(--text-color); flex: 1;">Cancel</button>
+                <button type="button" id="confirmEntryBtn" class="submit-btn primary-btn" style="flex: 1;"><i class="fa-solid fa-lock-open" aria-hidden="true"></i> Login</button>
+            </div>
+            <button type="button" id="citizenBtn" class="submit-btn" style="background: rgba(59, 130, 246, 0.1); border: 2px solid rgba(59, 130, 246, 0.3); color: var(--accent-color); font-weight: 800;"><i class="fa-solid fa-eye" aria-hidden="true"></i> Enter as Citizen (Observer)</button>
+        </div>
+    </div>
+</div> 
+
+<!-- ACTION AUTHORIZATION MODAL -->
+<div id="authModal" class="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" aria-describedby="authModalDesc">
+    <div class="auth-modal-box">
+        <h3 id="authModalTitle"><i class="fa-solid fa-user-shield" style="color: var(--accent-color); margin-right: 8px;" aria-hidden="true"></i>Admin Auth</h3>
+        <p id="authModalDesc">Please enter your administrative credentials to perform this action.</p>
+        
+        <div class="field">
+            <label for="authUsername">Username</label>
+            <input type="text" id="authUsername" placeholder="Enter Username" autocomplete="off">
+        </div>
+        <div class="field">
+            <label for="authPassword">Password</label>
+            <input type="password" id="authPassword" placeholder="Enter password" autocomplete="new-password">
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 25px;">
+            <button type="button" id="cancelAuthBtn" class="submit-btn" style="background: rgba(148, 163, 184, 0.2); color: var(--text-color);">Cancel</button>
+            <button type="button" id="confirmAuthBtn" class="submit-btn primary-btn"><i class="fa-solid fa-lock-open" aria-hidden="true"></i> Verify</button>
+        </div>
+    </div>
+</div>
+
+<!-- COMPLAINT DETAILS MODAL (WITH VOICE RECORDING) -->
+<div id="detailModal" class="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+    <div class="auth-modal-box" style="max-width: 550px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="detailModalTitle" style="margin: 0;">Incident Details</h3>
+            <button type="button" class="close-modal-btn" id="closeDetailBtn" aria-label="Close details modal"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+        <div id="detailContent">
+            <!-- Content populated via JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- MAP MODAL -->
+<div id="mapModal" class="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle">
+    <div class="auth-modal-box" style="max-width: 600px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="mapModalTitle" style="margin: 0;"><i class="fa-solid fa-map-location-dot" style="color: var(--accent-color);" aria-hidden="true"></i> Location Map</h3>
+            <button type="button" class="close-modal-btn" id="closeMapBtn" aria-label="Close map modal"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+        <div id="mapContent" style="height: 350px; background: #e2e8f0; border-radius: 16px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); overflow: hidden;">
+            <!-- Map iframe injected via JS -->
+        </div>
+    </div>
+</div>
+
+<nav class="floating-pill-bar" aria-label="Main Navigation">
+    <a href="index.html" class="pill-item" id="pill-home">
+        <i class="fa-solid fa-house" aria-hidden="true"></i>
+        <span>Home</span>
+    </a>
+    <a href="index_2.html" class="pill-item" id="pill-report">
+        <i class="fa-solid fa-file-waveform" aria-hidden="true"></i>
+        <span>Report Issue</span>
+    </a>
+    <a href="#" class="pill-item active-pill" id="pill-admin" aria-current="page">
+        <i class="fa-solid fa-shield" aria-hidden="true"></i>
+        <span>Admin Board</span>
+    </a>
+</nav>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Escape HTML to prevent XSS (Security Best Practice)
+    const escapeHTML = (str) => {
+        if(!str) return '';
+        return String(str).replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag])
+        );
+    };
+
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    
+    if (document.body.classList.contains('dark-theme')) {
+        themeToggleBtn.querySelector('i').className = 'fa-solid fa-sun';
+    } else {
+        themeToggleBtn.querySelector('i').className = 'fa-solid fa-moon';
+    }
+
+    themeToggleBtn.addEventListener('click', (e) => {
+        const toggleTheme = () => {
+            document.body.classList.toggle('dark-theme');
+            const currentlyDark = document.body.classList.contains('dark-theme');
+            themeToggleBtn.querySelector('i').className = currentlyDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            localStorage.setItem('civic_theme_pref', currentlyDark ? 'dark' : 'light');
+            
+            if (barChart && donutChart) {
+                Chart.defaults.color = currentlyDark ? '#94a3b8' : '#64748b';
+                barChart.update();
+                donutChart.update();
+            }
+        };
+
+        if (!document.startViewTransition) {
+            toggleTheme();
+            return;
+        }
+
+        const rect = themeToggleBtn.getBoundingClientRect();
+        const x = (e && e.clientX !== undefined && e.clientX !== 0) ? e.clientX : rect.left + rect.width / 2;
+        const y = (e && e.clientY !== undefined && e.clientY !== 0) ? e.clientY : rect.top + rect.height / 2;
+        
+        const endRadius = Math.hypot(
+            Math.max(x, window.innerWidth - x), 
+            Math.max(y, window.innerHeight - y)
+        );
+
+        document.documentElement.classList.add('theme-switching');
+
+        const transition = document.startViewTransition(() => {
+            toggleTheme();
+        });
+
+        transition.ready.then(() => {
+            document.documentElement.classList.remove('theme-switching');
+            
+            document.documentElement.animate(
+                {
+                    clipPath: [
+                        `circle(0px at ${x}px ${y}px)`,
+                        `circle(${endRadius}px at ${x}px ${y}px)`
+                    ],
+                },
+                {
+                    duration: 650, 
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    pseudoElement: '::view-transition-new(root)',
+                }
+            );
+        }).catch(() => {
+            document.documentElement.classList.remove('theme-switching');
+        });
+    });
+
+    let complaintsDb = [];
+    let initialLoadComplete = false;
+    let audioCtx = null;
+    let currentUser = null;
+    let currentStatusFilter = "all";
+    let currentSearchQuery = "";
+    let isFirebaseConnected = false;
+    let db, appId;
+    
+    let barChart = null;
+    let donutChart = null;
+
+    const fallbackDefaults = [
+        { id: "C-8271", name: "Sarah Jenkins", phone: "+1 555-0198", category: "Pothole", department: "Roads & Highways", priority: "High", status: "Pending", description: "Deep pothole near the highway entrance.", location: "40.7128, -74.0060", timestamp: Date.now() - 100000 },
+        { id: "C-1123", name: "Marcus Reed", phone: "+1 555-0245", category: "Garbage", department: "Sanitation", priority: "Medium", status: "Ongoing", description: "Trash bins overflowing for 3 days.", location: "Central Park West, NY", timestamp: Date.now() - 500000 },
+        { id: "C-4451", name: "Elena Rodriguez", phone: "+1 555-0871", category: "Water Leakage", department: "Water Supply", priority: "Low", status: "Solved", description: "Minor leak observed on the pipe system.", location: "Oak Street", timestamp: Date.now() - 900000 }
+    ];
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    document.body.addEventListener('click', initAudio, { once: true });
+
+    function playSuccessSound() {
+        if (!audioCtx) initAudio();
+        try {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine'; 
+            
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.15);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+            
+            gain.gain.setValueAtTime(0, now + 0.15);
+            gain.gain.linearRampToValueAtTime(0.3, now + 0.17);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+            osc.connect(gain); 
+            gain.connect(audioCtx.destination);
+            osc.start(now); 
+            osc.stop(now + 0.45);
+        } catch(e) {}
+    }
+
+    function playAlertSound() {
+        if (!audioCtx) initAudio();
+        try {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth'; 
+            
+            osc.frequency.setValueAtTime(349.23, now);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            
+            gain.gain.setValueAtTime(0, now + 0.2);
+            gain.gain.linearRampToValueAtTime(0.2, now + 0.22);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+            osc.connect(gain); 
+            gain.connect(audioCtx.destination);
+            osc.start(now); 
+            osc.stop(now + 0.4);
+        } catch(e) {}
+    }
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type === 'alert' ? 'toast-alert' : ''}`;
+        toast.innerHTML = `${type === 'alert' ? '<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>' : '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>'}
+                           <div class="toast-content">${escapeHTML(message)}</div>`;
+        container.appendChild(toast);
+        
+        if(type === 'alert') playAlertSound();
+        else playSuccessSound();
+
+        setTimeout(() => toast.classList.add('show'), 50);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        }, 4500); 
+    }
+
+    function initCharts() {
+        // Wait for Chart.js to load since it's deferred
+        if(typeof Chart === 'undefined') {
+            setTimeout(initCharts, 100);
+            return;
+        }
+
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        const donutCtx = document.getElementById('donutChart').getContext('2d');
+
+        Chart.defaults.color = document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b';
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.font.weight = '600';
+
+        barChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Pothole', 'Damaged Road', 'Flooding', 'Garbage', 'Water Leak', 'Street Light', 'Fallen Tree', 'Others'],
+                datasets: [{
+                    label: 'Incidents',
+                    data: [0, 0, 0, 0, 0, 0, 0, 0],
+                    backgroundColor: [
+                        '#818cf8', '#a78bfa', '#3b82f6', '#10b981', '#06b6d4', '#fbbf24', '#ec4899', '#94a3b8'
+                    ],
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1 }, grid: { color: 'rgba(148, 163, 184, 0.1)' }, border: { display: false } },
+                    x: { 
+                        grid: { display: false }, 
+                        border: { display: false },
+                        ticks: { maxRotation: 0, minRotation: 0, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        donutChart = new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['High Urgency', 'Medium Urgency', 'Low Urgency'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }
+                }
+            }
+        });
+    }
+
+    function loadLocalDb() {
+        let stored = localStorage.getItem('civic_reports_local_live');
+        if (!stored) {
+            localStorage.setItem('civic_reports_local_live', JSON.stringify(fallbackDefaults));
+            return fallbackDefaults;
+        }
+        try { return JSON.parse(stored); } 
+        catch(e) { return fallbackDefaults; }
+    }
+
+    function saveLocalDb(data) {
+        localStorage.setItem('civic_reports_local_live', JSON.stringify(data));
+        window.dispatchEvent(new Event('local_db_updated'));
+    }
+
+    initCharts();
+    complaintsDb = loadLocalDb();
+    updateDashboard();
+
+    let configObject = {};
+    let hasKeys = false;
+    if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+        try {
+            configObject = JSON.parse(__firebase_config);
+            if (configObject.apiKey && configObject.projectId) { hasKeys = true; }
+        } catch(e) {}
+    }
+
+    if (hasKeys) {
+        try {
+            const app = initializeApp(configObject);
+            const auth = getAuth(app);
+            db = getFirestore(app);
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            };
+            initAuth();
+
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                if (!user) return;
+                
+                const complaintsRef = collection(db, 'artifacts', appId, 'public', 'data', 'civic_reports_live');
+                
+                onSnapshot(complaintsRef, (snapshot) => {
+                    isFirebaseConnected = true;
+                    updateConnectivityStatus(true);
+
+                    if (initialLoadComplete) {
+                        snapshot.docChanges().forEach((change) => {
+                            if (change.type === 'added') {
+                                const newDoc = change.doc.data();
+                                showToast(`New Issue Reported: ${newDoc.category}`, 'alert');
+                            }
+                        });
+                    }
+                    
+                    complaintsDb = snapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
+                    complaintsDb.sort((a, b) => b.timestamp - a.timestamp);
+                    updateDashboard();
+                    initialLoadComplete = true;
+                }, (error) => {
+                    enableLocalStorageFallbackMode();
+                });
+            });
+        } catch(err) {
+            enableLocalStorageFallbackMode();
+        }
+    } else {
+        enableLocalStorageFallbackMode();
+    }
+
+    function updateConnectivityStatus(isOnline) {
+        const statusTag = document.getElementById('serverStatusTag');
+        const statusText = document.getElementById('serverStatusText');
+        if (isOnline) {
+            statusTag.className = "live-status-pill";
+            statusText.textContent = "Live Cloud Server";
+        } else {
+            statusTag.className = "live-status-pill offline";
+            statusText.textContent = "Local Live Sync";
+        }
+    }
+
+    function enableLocalStorageFallbackMode() {
+        if(isFirebaseConnected) return; 
+        isFirebaseConnected = false;
+        updateConnectivityStatus(false);
+        complaintsDb = loadLocalDb();
+        updateDashboard();
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'civic_reports_local_live') {
+                const updatedList = JSON.parse(e.newValue || '[]');
+                if (updatedList.length > complaintsDb.length) {
+                    const freshItem = updatedList.find(x => !complaintsDb.some(old => old.id === x.id));
+                    if (freshItem) showToast(`New Issue Reported: ${freshItem.category}`, 'alert');
+                }
+                complaintsDb = updatedList;
+                updateDashboard();
+            }
+        });
+        
+        window.addEventListener('local_db_updated', () => {
+            complaintsDb = loadLocalDb();
+            updateDashboard();
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                complaintsDb = loadLocalDb();
+                updateDashboard();
+            }
+        });
+        
+        showToast("Live Sync connected via Tab-Interconnect emulation mode.", "success");
+    }
+
+    async function hashSHA256(message) {
+        try {
+            if (crypto && crypto.subtle) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        } catch (e) {}
+        return btoa(message).split('').reverse().join(''); 
+    }
+
+    let expectedUserHash = '';
+    let expectedPassHash = '';
+    let currentRole = null;
+
+    (async () => {
+        expectedUserHash = await hashSHA256(atob("QWRtaW4=")); 
+        expectedPassHash = await hashSHA256(atob("a2Q4NGs1OHg=")); 
+    })();
+
+    const adminEntryModal = document.getElementById('adminEntryModal');
+    const entryUsernameInput = document.getElementById('entryUsername');
+    const entryPasswordInput = document.getElementById('entryPassword');
+    const confirmEntryBtn = document.getElementById('confirmEntryBtn');
+    const cancelEntryBtn = document.getElementById('cancelEntryBtn');
+    const citizenBtn = document.getElementById('citizenBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    confirmEntryBtn.addEventListener('click', async () => {
+        const username = entryUsernameInput.value.trim();
+        const password = entryPasswordInput.value;
+        const providedUserHash = await hashSHA256(username);
+        const providedPassHash = await hashSHA256(password);
+
+        if (providedUserHash === expectedUserHash && providedPassHash === expectedPassHash) {
+            currentRole = 'admin';
+            adminEntryModal.classList.remove('show');
+            showToast("Admin access granted.", "success");
+        } else {
+            showToast("Access Denied: Invalid Credentials.", "alert");
+        }
+    });
+
+    cancelEntryBtn.addEventListener('click', () => {
+        window.location.reload(); 
+    });
+
+    citizenBtn.addEventListener('click', () => {
+        currentRole = 'citizen';
+        adminEntryModal.classList.remove('show');
+        showToast("Observer Mode enabled. Read-only access granted.", "success");
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        currentRole = null;
+        entryUsernameInput.value = '';
+        entryPasswordInput.value = '';
+        adminEntryModal.classList.add('show');
+        showToast("Logged out successfully.", "success");
+    });
+
+
+    let pendingResolveDocId = null;
+    let pendingResolveId = null;
+    let pendingResolveBtn = null;
+    let pendingResolveNewStatus = null;
+
+    const authModal = document.getElementById('authModal');
+    const authUsernameInput = document.getElementById('authUsername');
+    const authPasswordInput = document.getElementById('authPassword');
+    const confirmAuthBtn = document.getElementById('confirmAuthBtn');
+    const cancelAuthBtn = document.getElementById('cancelAuthBtn');
+
+    function closeAuthModal() {
+        authModal.classList.remove('show');
+        pendingResolveBtn = null; pendingResolveDocId = null; pendingResolveId = null; pendingResolveNewStatus = null;
+    }
+
+    cancelAuthBtn.addEventListener('click', closeAuthModal);
+
+    confirmAuthBtn.addEventListener('click', async () => {
+        const username = authUsernameInput.value.trim();
+        const password = authPasswordInput.value;
+        const providedUserHash = await hashSHA256(username);
+        const providedPassHash = await hashSHA256(password);
+
+        if (providedUserHash === expectedUserHash && providedPassHash === expectedPassHash) {
+            const btn = pendingResolveBtn, docId = pendingResolveDocId, id = pendingResolveId, newStatus = pendingResolveNewStatus;
+            closeAuthModal();
+            await executeResolve(btn, docId, id, newStatus);
+        } else {
+            showToast("Access Denied: Invalid Credentials.", "alert");
+        }
+    });
+
+    async function executeResolve(targetBtn, docId, id, newStatus) {
+        const originalHtml = targetBtn.innerHTML;
+        targetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>';
+        try {
+            if (isFirebaseConnected && db) {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'civic_reports_live', docId);
+                if(newStatus === 'Delete') {
+                    await deleteDoc(docRef);
+                } else {
+                    await updateDoc(docRef, { status: newStatus });
+                }
+            } else {
+                let localData = loadLocalDb();
+                if(newStatus === 'Delete') {
+                    localData = localData.filter(x => x.docId !== docId && x.id !== id);
+                } else {
+                    const targetItem = localData.find(x => x.docId === docId || x.id === id);
+                    if (targetItem) targetItem.status = newStatus;
+                }
+                saveLocalDb(localData);
+            }
+            showToast(`Success! Ticket ${escapeHTML(id)} ${newStatus === 'Delete' ? 'deleted' : `marked as ${escapeHTML(newStatus)}`}!`);
+        } catch(err) {
+            targetBtn.innerHTML = originalHtml;
+            showToast("Action failed to sync.", "alert");
+        }
+    }
+
+    function openDetailModal(complaint) {
+        const detailContent = document.getElementById('detailContent');
+        
+        const reporterName = escapeHTML(complaint.name || complaint.fullName || complaint.reporterName || 'Anonymous');
+        const reporterPhone = escapeHTML(complaint.phone || complaint.phoneNumber || complaint.userPhone || complaint.contactNumber || complaint.contact || 'Not Provided');
+        
+        const displayLocation = currentRole === 'admin' 
+            ? escapeHTML(complaint.location || 'Not specified') 
+            : '<span style="color: #ef4444; font-weight: 700; background: rgba(239,68,68,0.1); padding: 4px 8px; border-radius: 6px;"><i class="fa-solid fa-lock" aria-hidden="true"></i> Hidden (Admin Only)</span>';
+        
+        const imgUrl = complaint.img ? escapeHTML(complaint.img) : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23e2e8f0"/><text x="50" y="50" font-family="sans-serif" font-size="14" fill="%2364748b" text-anchor="middle" alignment-baseline="middle">No Image</text></svg>';
+        const audioTag = complaint.audioUrl ? `<audio controls src="${escapeHTML(complaint.audioUrl)}"></audio>` : `<p style="font-size: 0.85rem; color: var(--text-muted); margin:0;">No voice recording provided by the reporter.</p>`;
+        
+        detailContent.innerHTML = `
+            <div style="display:flex; gap: 20px; align-items: flex-start; margin-bottom: 20px;">
+                <img src="${imgUrl}" alt="Incident Preview" onerror="this.style.display='none'" style="width: 100px; height: 100px; border-radius: 16px; object-fit: cover; border: 1px solid var(--glass-border); background: #e2e8f0;">
+                <div>
+                    <h4 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 5px;">${escapeHTML(complaint.category)} <span style="font-size: 0.9rem; color: var(--accent-color);">#${escapeHTML(complaint.id)}</span></h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 5px 0;"><i class="fa-solid fa-user" style="width: 16px;" aria-hidden="true"></i> ${reporterName} &nbsp;|&nbsp; <i class="fa-solid fa-phone" style="width: 16px;" aria-hidden="true"></i> ${reporterPhone}</p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 10px 0;"><i class="fa-solid fa-building" style="width: 16px;" aria-hidden="true"></i> ${escapeHTML(complaint.department)}</p>
+                    <div style="display: flex; gap: 10px;">
+                        <span class="prio-badge prio-${escapeHTML(complaint.priority)}">${escapeHTML(complaint.priority)}</span>
+                        <span class="status-badge status-${escapeHTML(complaint.status).toLowerCase()}">${escapeHTML(complaint.status)}</span>
+                    </div>
+                </div>
+            </div>
+            <div style="background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                <h5 style="margin: 0 0 8px 0; font-weight: 800; font-size: 0.95rem;">Description</h5>
+                <p style="font-size: 0.9rem; line-height: 1.5; color: var(--text-color); margin: 0;">${escapeHTML(complaint.description)}</p>
+                
+                <h5 style="margin: 15px 0 8px 0; font-weight: 800; font-size: 0.95rem;"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Location</h5>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">${displayLocation}</p>
+            </div>
+            <div class="audio-player-container" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                <h5 style="margin: 0 0 8px 0; font-weight: 800; font-size: 0.95rem;"><i class="fa-solid fa-microphone" aria-hidden="true"></i> Voice Recording</h5>
+                ${audioTag}
+            </div>
+        `;
+        document.getElementById('detailModal').classList.add('show');
+    }
+    
+    document.getElementById('closeDetailBtn').addEventListener('click', () => {
+        document.getElementById('detailModal').classList.remove('show');
+    });
+
+    document.getElementById('closeMapBtn').addEventListener('click', () => {
+        document.getElementById('mapModal').classList.remove('show');
+        document.getElementById('mapContent').innerHTML = ''; 
+    });
+
+    function updateDashboard() {
+        document.getElementById('totalCount').textContent = complaintsDb.length;
+        document.getElementById('pendingCount').textContent = complaintsDb.filter(c => c.status === "Pending").length;
+        document.getElementById('ongoingCount').textContent = complaintsDb.filter(c => c.status === "Ongoing").length;
+        document.getElementById('solvedCount').textContent = complaintsDb.filter(c => c.status === "Solved").length;
+
+        if (barChart && donutChart) {
+            let pothole = 0, damagedRoad = 0, flood = 0, garbage = 0, waterLeakage = 0, streetLight = 0, fallenTree = 0, others = 0;
+            let high = 0, medium = 0, low = 0;
+
+            complaintsDb.forEach(c => {
+                const cat = c.category;
+                if (cat === 'Pothole') pothole++;
+                else if (cat === 'Damaged Road') damagedRoad++;
+                else if (cat === 'Flood') flood++;
+                else if (cat === 'Garbage') garbage++;
+                else if (cat === 'Water Leakage') waterLeakage++;
+                else if (cat === 'Broken Street Light') streetLight++;
+                else if (cat === 'Fallen Tree') fallenTree++;
+                else others++;
+
+                if (c.priority === 'High') high++;
+                else if (c.priority === 'Medium') medium++;
+                else low++;
+            });
+
+            barChart.data.datasets[0].data = [pothole, damagedRoad, flood, garbage, waterLeakage, streetLight, fallenTree, others];
+            barChart.update();
+
+            donutChart.data.datasets[0].data = [high, medium, low];
+            donutChart.update();
+        }
+
+        const tableBody = document.getElementById('complaintTable');
+        tableBody.innerHTML = "";
+
+        const filteredList = complaintsDb.filter(c => {
+            const matchesStatus = (currentStatusFilter === "all" || c.status === currentStatusFilter);
+            const matchQuery = (c.id && c.id.toLowerCase().includes(currentSearchQuery.toLowerCase())) || 
+                               (c.department && c.department.toLowerCase().includes(currentSearchQuery.toLowerCase())) || 
+                               (c.description && c.description.toLowerCase().includes(currentSearchQuery.toLowerCase()));
+            return matchesStatus && matchQuery;
+        });
+
+        document.getElementById('visibleCounter').textContent = `Showing ${filteredList.length} complaints`;
+
+        if (filteredList.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-box-open" style="font-size:2rem; margin-bottom:12px; display:block;" aria-hidden="true"></i>No complaints found. Data will populate as reports come in!</td></tr>`;
+            return;
+        }
+
+        filteredList.forEach(c => {
+            const tr = document.createElement('tr');
+            if (Date.now() - c.timestamp < 6000) { tr.classList.add('row-incoming-dispatch'); }
+
+            const reporterName = escapeHTML(c.name || c.fullName || c.reporterName || 'Anonymous');
+            const reporterPhone = escapeHTML(c.phone || c.phoneNumber || c.userPhone || c.contactNumber || c.contact || 'Not Provided');
+            const placeholderImgUrl = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'><rect width='44' height='44' fill='%23e2e8f0'/><text x='22' y='22' font-family='sans-serif' font-size='10' fill='%2364748b' text-anchor='middle' alignment-baseline='middle'>IMG</text></svg>";
+            const imgSrc = c.img ? escapeHTML(c.img) : placeholderImgUrl;
+
+            tr.innerHTML = `
+                <td><span class="complaint-id">${escapeHTML(c.id)}</span></td>
+                <td><img class="complaint-thumb" src="${imgSrc}" alt="Incident" onerror="this.src='${placeholderImgUrl}'"></td>
+                <td><strong>${reporterName}</strong></td>
+                <td><span style="font-family: monospace; font-size: 0.9rem; color: var(--text-muted);">${reporterPhone}</span></td>
+                <td style="max-width:250px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+                    <strong>${escapeHTML(c.category)}</strong> - <span style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(c.description)}</span>
+                </td>
+                <td><strong>${escapeHTML(c.department)}</strong></td>
+                <td>
+                    <div class="map-cell-wrap">
+                        <span class="prio-badge prio-${escapeHTML(c.priority)}">${escapeHTML(c.priority)}</span>
+                        <button type="button" class="btn-map show-map-btn" data-loc="${escapeHTML(c.location || 'Location Not Provided')}" title="View on Map" aria-label="View Location on Map">
+                            <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </td>
+                <td><span class="status-badge status-${escapeHTML(c.status).toLowerCase()}">${escapeHTML(c.status)}</span></td>
+                <td class="action-cell">
+                    <div class="action-cell-wrapper">
+                        <button type="button" class="btn-action-icon trigger-menu-btn" title="Update Status Options" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>
+                        </button>
+                        <div class="action-dropdown" role="menu">
+                            <button type="button" class="opt-pending change-state-btn" role="menuitem" data-doc="${escapeHTML(c.docId || '')}" data-id="${escapeHTML(c.id)}" data-status="Pending">
+                                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Pending
+                            </button>
+                            <button type="button" class="opt-ongoing change-state-btn" role="menuitem" data-doc="${escapeHTML(c.docId || '')}" data-id="${escapeHTML(c.id)}" data-status="Ongoing">
+                                <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Ongoing
+                            </button>
+                            <button type="button" class="opt-solved change-state-btn" role="menuitem" data-doc="${escapeHTML(c.docId || '')}" data-id="${escapeHTML(c.id)}" data-status="Solved">
+                                <i class="fa-solid fa-check-double" aria-hidden="true"></i> Solved
+                            </button>
+                            <button type="button" class="opt-delete change-state-btn" role="menuitem" data-doc="${escapeHTML(c.docId || '')}" data-id="${escapeHTML(c.id)}" data-status="Delete">
+                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            `;
+
+            tr.addEventListener('click', (e) => {
+                if (e.target.closest('.trigger-menu-btn') || 
+                    e.target.closest('.action-dropdown') || 
+                    e.target.closest('.show-map-btn')) {
+                    return;
+                }
+                openDetailModal(c);
+            });
+
+            tableBody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.show-map-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                
+                if (currentRole !== 'admin') {
+                    showToast("Observer Mode: Map and Location access is restricted to Admins only.", "alert");
+                    return;
+                }
+                
+                const loc = btn.dataset.loc;
+                const mapContent = document.getElementById('mapContent');
+                mapContent.innerHTML = `<iframe title="Incident Location Map" width="100%" height="100%" style="border:0;" loading="lazy" allowfullscreen src="https://maps.google.com/maps?q=${encodeURIComponent(loc)}&t=&z=14&ie=UTF8&iwloc=&output=embed"></iframe>`;
+                document.getElementById('mapModal').classList.add('show');
+            });
+        });
+
+        document.querySelectorAll('.trigger-menu-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (currentRole !== 'admin') {
+                    showToast("Observer Mode: Action not permitted.", "alert");
+                    return;
+                }
+                const dropdown = btn.nextElementSibling;
+                const isExpanded = dropdown.classList.contains('show');
+                
+                document.querySelectorAll('.action-dropdown').forEach(d => d.classList.remove('show'));
+                document.querySelectorAll('.trigger-menu-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+                
+                if (!isExpanded) {
+                    dropdown.classList.add('show');
+                    btn.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+
+        document.querySelectorAll('.change-state-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (currentRole !== 'admin') return;
+                const targetBtn = e.currentTarget, docId = targetBtn.dataset.doc, id = targetBtn.dataset.id, newStatus = targetBtn.dataset.status;
+                executeResolve(targetBtn, docId, id, newStatus);
+            });
+        });
+    }
+
+    document.addEventListener('click', () => { 
+        document.querySelectorAll('.action-dropdown').forEach(d => d.classList.remove('show')); 
+        document.querySelectorAll('.trigger-menu-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            btn.classList.add('active'); 
+            btn.setAttribute('aria-selected', 'true');
+            currentStatusFilter = btn.dataset.status; 
+            updateDashboard();
+        });
+    });
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value; updateDashboard();
+    });
+
+</script>
+</body>
+</html>

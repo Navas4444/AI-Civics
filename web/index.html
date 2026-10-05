@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Civic Issue Reporting Platform</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<!-- Chart.js for real graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --font-main: 'Poppins', sans-serif;
+        
+        /* Light Mode Colors - Vibrant Gradient & Glass */
+        --bg-color: #f4f7fb;
+        --text-color: #111827;
+        --text-muted: #4b5563; 
+        --glass-bg: rgba(255, 255, 255, 0.65);
+        --glass-border: rgba(255, 255, 255, 0.8);
+        --glass-shadow: rgba(0, 0, 0, 0.08);
+        --accent-color: #4f46e5;
+        --accent-glow: rgba(79, 70, 229, 0.4);
+        
+        /* Vibrant Background Colors */
+        --blob-pink: #ff7eb3;
+        --blob-blue: #4facfe;
+        --blob-green: #43e97b;
+        
+        --card-bg-hover: rgba(255, 255, 255, 0.85);
+        --chart-grid: rgba(0, 0, 0, 0.05);
+
+        /* Screen Fade Colors (Light Mode: White) */
+        --fade-color-start: rgba(255, 255, 255, 1);
+        --fade-color-end: rgba(255, 255, 255, 0);
+    }
+
+    body.dark-theme {
+        /* Dark Mode Colors - Deep Gradient & Glass */
+        --bg-color: #0b0f19;
+        --text-color: #f3f4f6;
+        --text-muted: #9ca3af;
+        --glass-bg: rgba(17, 24, 39, 0.65);
+        --glass-border: rgba(255, 255, 255, 0.12);
+        --glass-shadow: rgba(0, 0, 0, 0.4);
+        --accent-color: #818cf8;
+        --accent-glow: rgba(129, 140, 248, 0.4);
+        
+        /* Deepened Background Colors for Dark Mode */
+        --blob-pink: #9d174d;
+        --blob-blue: #1e3a8a;
+        --blob-green: #064e3b;
+        
+        --card-bg-hover: rgba(31, 41, 55, 0.85);
+        --chart-grid: rgba(255, 255, 255, 0.05);
+
+        /* Screen Fade Colors (Dark Mode: Black) */
+        --fade-color-start: rgba(0, 0, 0, 1);
+        --fade-color-end: rgba(0, 0, 0, 0);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        scroll-behavior: smooth;
+    }
+
+    /* Custom Scrollbar for smoothness */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: var(--bg-color);
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-color);
+        border-radius: 10px;
+    }
+
+    body {
+        font-family: var(--font-main);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        overflow-x: hidden;
+        line-height: 1.6;
+        transition: background-color 0.5s ease, color 0.5s ease;
+    }
+
+    /* =========================================================
+       DYNAMIC VIEWPORT FADE OVERLAYS
+       ========================================================= */
+    .screen-fade-top {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(to bottom, var(--fade-color-start) 0%, var(--fade-color-end) 100%);
+        z-index: 99; /* Below sticky navbar (z-index 100) but above contents */
+        pointer-events: none;
+        transition: background 0.5s ease;
+    }
+
+    .screen-fade-bottom {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(to top, var(--fade-color-start) 0%, var(--fade-color-end) 100%);
+        z-index: 9998; /* Directly below the floating pill bar (z-index 9999) */
+        pointer-events: none;
+        transition: background 0.5s ease;
+    }
+
+    /* =========================================================
+       HUGE, SLOW MOVING GRADIENT BLOBS
+       ========================================================= */
+    .bg-blobs {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        overflow: hidden;
+        pointer-events: none;
+        background: var(--bg-color);
+    }
+
+    .blob {
+        position: absolute;
+        filter: blur(140px);
+        opacity: 0.85;
+        border-radius: 50%;
+        will-change: transform;
+    }
+
+    .blob-pink {
+        top: -20%; left: -10%;
+        width: 80vw; height: 80vw;
+        background: var(--blob-pink);
+        animation: movePink 45s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .blob-blue {
+        bottom: -20%; right: -20%;
+        width: 90vw; height: 90vw;
+        background: var(--blob-blue);
+        animation: moveBlue 55s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .blob-green {
+        top: 20%; left: 30%;
+        width: 70vw; height: 70vw;
+        background: var(--blob-green);
+        animation: moveGreen 60s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes movePink {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30vw, 20vh) scale(1.3); }
+        66% { transform: translate(-10vw, 40vh) scale(0.9); }
+        100% { transform: translate(15vw, -15vh) scale(1.1); }
+    }
+
+    @keyframes moveBlue {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-35vw, -25vh) scale(1.2); }
+        66% { transform: translate(25vw, -10vh) scale(0.85); }
+        100% { transform: translate(-10vw, 15vh) scale(1.15); }
+    }
+
+    @keyframes moveGreen {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(25vw, -35vh) scale(1.4); }
+        66% { transform: translate(-30vw, 25vh) scale(0.9); }
+        100% { transform: translate(10vw, 10vh) scale(1.2); }
+    }
+
+    /* =========================================================
+       PREMIUM GLASSMORPHISM
+       ========================================================= */
+    .liquid-glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 10px 40px 0 var(--glass-shadow);
+        border-radius: 28px;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .liquid-glass:hover {
+        box-shadow: 0 15px 50px 0 var(--glass-shadow);
+        background: var(--card-bg-hover);
+        transform: translateY(-5px);
+    }
+
+    /* Scroll Reveal Animation Classes */
+    .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* =========================================================
+       NAVBAR
+       ========================================================= */
+    header.navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px 12px 30px;   
+        margin: 20px auto;   
+        max-width: 1200px;
+        position: sticky;
+        top: 20px;           
+        z-index: 100;
+        border-radius: 50px;
+        width: calc(100% - 40px);
+    }
+
+    header.navbar:hover {
+        transform: none; /* Prevent navbar from jumping */
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+    }
+    
+    .logo-icon {
+        background: transparent;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px var(--accent-glow);
+        border: 2px solid var(--glass-border);
+        overflow: hidden;
+    }
+
+    .logo-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .logo h2 {
+        font-size: 1.3rem;  
+        font-weight: 800;
+        background: linear-gradient(45deg, var(--accent-color), #d946ef);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
+    }
+
+    nav {
+        display: flex;
+        gap: 30px;           
+        align-items: center;
+    }
+
+    nav > a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 600;
+        font-size: 0.95rem;  
+        transition: color 0.3s, transform 0.3s;
+        position: relative;
+    }
+
+    nav > a:not(.btn)::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -4px;
+        left: 0;
+        background: var(--accent-color);
+        transition: width 0.3s ease;
+    }
+
+    nav > a:not(.btn):hover::after {
+        width: 100%;
+    }
+
+    nav > a:not(.btn):hover {
+        color: var(--accent-color);
+    }
+
+    .btn {
+        padding: 12px 28px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .navbar .btn {
+        padding: 10px 24px;
+        font-size: 0.9rem;
+    }
+    
+    .start-btn, .primary-btn, .cta-button {
+        background: linear-gradient(135deg, var(--accent-color), #6366f1);
+        color: #fff !important;
+        border: none;
+        box-shadow: 0 6px 20px var(--accent-glow);
+    }
+    
+    .start-btn:hover, .primary-btn:hover, .cta-button:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 25px var(--accent-glow);
+    }
+
+    .secondary-btn {
+        background: var(--glass-bg);
+        border: 2px solid var(--accent-color);
+        color: var(--text-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .secondary-btn:hover {
+        background: var(--accent-color);
+        color: #fff;
+        transform: translateY(-3px);
+    }
+
+    /* TOP ACTION PILL (SEARCH & THEME) */
+    .nav-actions-pill {
+        display: flex;
+        align-items: center;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 50px;
+        padding: 4px;
+        gap: 2px;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        margin-left: 10px;
+    }
+
+    .nav-actions-pill .search-input {
+        width: 0;
+        opacity: 0;
+        border: none;
+        background: transparent;
+        outline: none;
+        color: var(--text-color);
+        font-family: var(--font-main);
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.4s ease, padding 0.5s ease;
+        padding: 0;
+    }
+
+    .nav-actions-pill.expanded .search-input {
+        width: 180px;
+        opacity: 1;
+        padding: 0 5px 0 15px;
+    }
+
+    .nav-actions-pill.expanded {
+        box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .nav-icon-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-color);
+        cursor: pointer;
+        font-size: 1.1rem;
+        width: 40px;         
+        height: 40px;        
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .nav-icon-btn:hover {
+        background: var(--card-bg-hover);
+        transform: scale(1.1) rotate(5deg);
+        color: var(--accent-color);
+    }
+
+    /* =========================================================
+       LAYOUT & TYPOGRAPHY
+       ========================================================= */
+    section {
+        margin: 80px auto;
+        padding: 60px 50px;
+        max-width: 1200px;
+        width: calc(100% - 40px);
+    }
+
+    section h2 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: var(--text-color);
+        text-align: center;
+        letter-spacing: -1px;
+    }
+
+    section.side-title h2 {
+        text-align: left;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        margin-bottom: 50px;
+        font-size: 1.15rem;
+        max-width: 750px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    section p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 24px;
+    }
+
+    /* =========================================================
+       HERO SECTION
+       ========================================================= */
+    .hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 50px;
+        padding: 80px 50px;
+        min-height: 80vh;
+        border-radius: 40px;
+        margin-top: 40px;
+    }
+
+    .hero-left {
+        flex: 1.1;
+        max-width: 650px;
+    }
+
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        border-radius: 30px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 25px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--accent-color);
+        box-shadow: 0 4px 15px var(--glass-shadow);
+        backdrop-filter: blur(10px);
+    }
+
+    .hero h1 {
+        font-size: 4.5rem;
+        line-height: 1.1;
+        margin-bottom: 25px;
+        font-weight: 800;
+        letter-spacing: -1.5px;
+    }
+
+    .hero h1 span {
+        background: linear-gradient(to right, var(--accent-color), #d946ef);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 20px;
+        margin: 40px 0;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 50px;
+        margin-top: 50px;
+        padding-top: 35px;
+        border-top: 1px solid var(--glass-border);
+    }
+
+    .stat h2 {
+        font-size: 2.5rem;
+        margin-bottom: 5px;
+        color: var(--accent-color);
+        letter-spacing: -1px;
+    }
+    .stat span {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .hero-right {
+        flex: 0.9;
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
+
+    .hero-image-card {
+        position: relative;
+        padding: 18px;
+        border-radius: 36px;
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .hero-image-card img {
+        width: 100%;
+        height: 550px;
+        border-radius: 24px;
+        object-fit: cover;
+        box-shadow: 0 15px 40px var(--glass-shadow);
+    }
+
+    .ai-card {
+        position: absolute;
+        bottom: -30px;
+        left: -50px;
+        padding: 24px 30px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(150%);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px var(--glass-shadow);
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .ai-card h3 {
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        color: var(--text-color);
+    }
+    
+    .ai-card p {
+        margin: 10px 0;
+        font-size: 1rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+    }
+
+    /* =========================================================
+       NEW: NEURAL CORE (BENTO BOX LAYOUT)
+       ========================================================= */
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        grid-template-rows: auto auto;
+        gap: 25px;
+        margin-top: 50px;
+    }
+
+    .bento-card {
+        padding: 40px;
+        border-radius: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bento-card i.main-icon {
+        background: rgba(79, 70, 229, 0.15);
+        color: var(--accent-color);
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+    }
+
+    body.dark-theme .bento-card i.main-icon {
+        background: rgba(129, 140, 248, 0.2);
+    }
+
+    .bento-card h3 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+        color: var(--text-color);
+    }
+
+    .bento-card p {
+        font-size: 1.05rem;
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    .bento-link {
+        margin-top: auto;
+        padding-top: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--accent-color);
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 1.05rem;
+        transition: gap 0.3s ease;
+    }
+    
+    .bento-link:hover {
+        gap: 12px;
+    }
+
+    /* Specific Grid Placements */
+    .bento-large {
+        grid-column: span 7;
+        grid-row: span 2;
+        background: linear-gradient(145deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3));
+    }
+    
+    body.dark-theme .bento-large {
+        background: linear-gradient(145deg, rgba(31, 41, 55, 0.8), rgba(17, 24, 39, 0.6));
+    }
+
+    .bento-top-right {
+        grid-column: span 5;
+        grid-row: span 1;
+    }
+
+    .bento-bottom-left {
+        grid-column: span 2;
+        grid-row: span 1;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        padding: 30px;
+    }
+    .bento-bottom-left i.main-icon { color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
+
+    .bento-bottom-right {
+        grid-column: span 3;
+        grid-row: span 1;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        padding: 30px;
+    }
+    .bento-bottom-right i.main-icon { color: #10b981; background: rgba(16, 185, 129, 0.15); }
+
+    .bento-bottom-left h3, .bento-bottom-right h3 {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+    .bento-bottom-left p, .bento-bottom-right p {
+        font-size: 0.95rem;
+    }
+
+    /* Background decorative icon for large bento */
+    .bento-bg-icon {
+        position: absolute;
+        bottom: -30px;
+        right: -30px;
+        font-size: 12rem;
+        color: var(--text-color);
+        opacity: 0.04;
+        pointer-events: none;
+    }
+
+    /* =========================================================
+       FEATURES SECTION (Expanded to 6 features)
+       ========================================================= */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 50px;
+    }
+
+    .feature-card {
+        padding: 40px 30px;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .feature-card i {
+        font-size: 2.2rem;
+        color: var(--accent-color);
+        margin-bottom: 25px;
+        background: rgba(79, 70, 229, 0.15);
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+    
+    body.dark-theme .feature-card i {
+        background: rgba(129, 140, 248, 0.2);
+    }
+
+    .feature-card:hover i {
+        transform: scale(1.1) rotate(-5deg);
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .feature-card h3 {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+        letter-spacing: -0.5px;
+    }
+
+    .feature-card p {
+        font-size: 1.05rem;
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    /* =========================================================
+       NEW: WORKFLOW / HOW IT WORKS
+       ========================================================= */
+    .workflow-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        margin-top: 60px;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    .workflow-container::before {
+        content: '';
+        position: absolute;
+        top: 40px;
+        left: 5%;
+        right: 5%;
+        height: 2px;
+        background: var(--glass-border);
+        z-index: 0;
+    }
+
+    .step {
+        flex: 1;
+        min-width: 200px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .step-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--glass-bg);
+        border: 2px solid var(--accent-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: var(--accent-color);
+        margin: 0 auto 20px auto;
+        box-shadow: 0 10px 25px var(--glass-shadow);
+        backdrop-filter: blur(10px);
+    }
+
+    .step h4 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    .step p {
+        font-size: 0.95rem;
+    }
+
+    /* =========================================================
+       NEW: INTEGRATIONS
+       ========================================================= */
+    .integrations-marquee {
+        display: flex;
+        gap: 30px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 40px;
+    }
+
+    .integration-pill {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 30px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .integration-pill i {
+        font-size: 1.4rem;
+        color: var(--accent-color);
+    }
+
+    /* =========================================================
+       REAL CHARTS / ANALYTICS SECTION
+       ========================================================= */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .chart-container {
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        min-height: 350px;
+    }
+
+    .chart-container h3 {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .chart-container canvas {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 300px;
+    }
+
+    /* =========================================================
+       TECHNOLOGY SECTION
+       ========================================================= */
+    #technology {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    #technology p {
+        font-size: 1.2rem;
+        max-width: 900px;
+    }
+
+    /* =========================================================
+       ACCORDION FAQ
+       ========================================================= */
+    .accordion-container {
+        max-width: 850px;
+        margin: 50px auto 0 auto;
+    }
+
+    .accordion-item {
+        margin-bottom: 20px;
+        overflow: hidden;
+        border-radius: 20px !important;
+        border: 1px solid var(--glass-border);
+    }
+
+    .accordion-header {
+        padding: 24px 30px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 700;
+        font-size: 1.15rem;
+        transition: background 0.3s;
+    }
+
+    .accordion-header:hover {
+        background: var(--card-bg-hover);
+        color: var(--accent-color);
+    }
+
+    .accordion-header i {
+        font-size: 1.1rem;
+        color: var(--accent-color);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.4s;
+        padding: 0 30px;
+    }
+
+    .accordion-content p {
+        font-size: 1.05rem;
+        margin-bottom: 24px;
+        margin-top: 10px;
+        text-align: left;
+        color: var(--text-muted);
+    }
+
+    .accordion-item.active .accordion-header i {
+        transform: rotate(180deg);
+    }
+
+    .accordion-item.active .accordion-content {
+        max-height: 400px;
+        padding-bottom: 15px;
+    }
+
+    /* =========================================================
+       CTA SECTION
+       ========================================================= */
+    .cta {
+        text-align: center;
+        padding: 100px 50px;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(217, 70, 239, 0.1));
+    }
+    
+    .cta p {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 40px auto;
+        font-size: 1.25rem;
+    }
+
+    footer {
+        text-align: center;
+        padding: 40px;
+        margin-top: 60px;
+        margin-bottom: 110px;
+        border-top: 1px solid var(--glass-border);
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    /* =========================================================
+       FLOATING BOTTOM PILL BAR
+       ========================================================= */
+    .floating-pill-bar {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        padding: 8px; 
+        gap: 6px;
+        height: 65px; 
+        border-radius: 65px; 
+        width: max-content;
+        max-width: 90vw;
+        
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px) saturate(200%);
+        -webkit-backdrop-filter: blur(24px) saturate(200%);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 15px 40px 0 var(--glass-shadow),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .floating-pill-bar:hover {
+        bottom: 34px;
+        box-shadow: 0 25px 50px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    body.dark-theme .floating-pill-bar:hover {
+        box-shadow: 0 25px 50px 0 rgba(0, 0, 0, 0.8);
+    }
+
+    .pill-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        height: 100%; 
+        padding: 0 28px;
+        border-radius: 50px; 
+        text-decoration: none;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .pill-item i {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        transition: color 0.3s;
+    }
+
+    .pill-item:hover {
+        background: var(--card-bg-hover);
+    }
+
+    .pill-item:hover i {
+        color: var(--accent-color);
+    }
+
+    .pill-item.active-pill {
+        background: var(--accent-color);
+        color: #fff !important;
+        box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .pill-item.active-pill i {
+        color: #fff !important;
+    }
+
+    /* =========================================================
+       CUSTOM NOTIFICATION TOAST
+       ========================================================= */
+    .toast-notification {
+        position: fixed;
+        top: 100px;
+        right: 30px;
+        padding: 16px 28px;
+        background: linear-gradient(135deg, var(--accent-color), #6366f1);
+        color: #fff;
+        border-radius: 16px;
+        box-shadow: 0 15px 40px var(--accent-glow);
+        transform: translateY(-20px);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 1000;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .toast-notification.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    /* =========================================================
+       MEDIA QUERIES
+       ========================================================= */
+    @media (max-width: 992px) {
+        .hero {
+            flex-direction: column;
+            text-align: center;
+            padding: 50px 30px;
+        }
+        .hero-left {
+            max-width: 100%;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+        }
+        .hero-buttons, .hero-stats {
+            justify-content: center;
+        }
+        .ai-card {
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -30px;
+            width: 90%;
+            animation: none;
+        }
+        nav {
+            display: none; 
+        }
+        .bento-large, .bento-top-right, .bento-bottom-left, .bento-bottom-right {
+            grid-column: span 12;
+        }
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+        .workflow-container::before {
+            display: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        section {
+            padding: 50px 25px;
+            margin: 40px auto;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .pill-item span {
+            display: none;
+        }
+        .pill-item {
+            padding: 0 20px; 
+        }
+    }
+
+    /* =========================================================
+       THEME SPREAD ANIMATION FIXES
+       ========================================================= */
+    .theme-switching, .theme-switching * {
+        transition: none !important;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
+        display: block;
+    }
+    ::view-transition-old(root) {
+        z-index: 1; 
+    }
+    ::view-transition-new(root) {
+        z-index: 2; 
+    }
+</style>
+</head>
+<body>
+
+<script>
+    // Initialize Theme immediately to prevent flash
+    if (localStorage.getItem('civic_theme_pref') === 'dark') {
+        document.body.classList.add('dark-theme');
+    }
+</script>
+
+<!-- DYNAMIC VIEWPORT FADE OVERLAYS (WHITE IN LIGHT / BLACK IN DARK) -->
+<div class="screen-fade-top"></div>
+<div class="screen-fade-bottom"></div>
+
+<!-- HUGE SLOW GRADIENT BACKGROUND -->
+<div class="bg-blobs">
+    <div class="blob blob-pink"></div>
+    <div class="blob blob-blue"></div>
+    <div class="blob blob-green"></div>
+</div>
+
+<!-- TOP NAVBAR -->
+<header class="navbar liquid-glass reveal">
+    <a href="#" class="logo">
+        <div class="logo-icon">
+            <img src="image.jpg" alt="AI Civic Logo">
+        </div>
+        <h2>AI Civic Platform</h2>
+    </a>
+    <nav>
+        <a href="#neural-core">Neural Core</a>
+        <a href="#features">Features</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn start-btn" href="index_2.html">Get Started</a>
+    </nav>
+    
+    <div class="nav-actions-pill" id="navActionsPill">
+        <input type="text" placeholder="Search issues, guides..." class="search-input" id="searchInput">
+        <button class="nav-icon-btn search-btn" id="searchBtn" aria-label="Search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="nav-icon-btn theme-toggle" id="themeToggleBtn" aria-label="Toggle Dark Mode">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </div>
+</header>
+
+<!-- SEARCH TOAST NOTIFICATION -->
+<div class="toast-notification" id="toastNotification">Search triggered!</div>
+
+<!-- HERO SECTION -->
+<section class="hero liquid-glass reveal" id="home">
+    <div class="hero-left">
+        <span class="hero-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Powered Smart City Solution</span>
+        <h1>Build <span>Smarter Cities</span><br>Through Intelligent<br>Civic Reporting</h1>
+        <p>
+            The AI Civic Issue Reporting Platform helps citizens report potholes,
+            floods, garbage accumulation, damaged roads, broken streetlights,
+            drainage problems, water leakage and disaster-related incidents.
+            Artificial Intelligence automatically categorizes reports,
+            estimates severity and forwards them to the appropriate authority,
+            making issue resolution faster and more transparent.
+        </p>
+        <div class="hero-buttons">
+            <a href="index_2.html" class="btn primary-btn"><i class="fa-solid fa-rocket"></i> Report Issue Now</a>
+            <a href="#features" class="btn secondary-btn">Learn More</a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <h2>25K+</h2>
+                <span>Reports</span>
+            </div>
+            <div class="stat">
+                <h2>95%</h2>
+                <span>AI Accuracy</span>
+            </div>
+            <div class="stat">
+                <h2>150+</h2>
+                <span>Cities</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-right">
+        <div class="hero-image-card liquid-glass">
+            <img src="https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=800&q=80" alt="Smarter City" onerror="this.src='https://placehold.co/600x600/4f46e5/ffffff?text=Smart+City'">
+            <div class="ai-card liquid-glass">
+                <h3><i class="fa-solid fa-microchip"></i> AI Analysis</h3>
+                <p><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Road Damage Detected</p>
+                <p><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> GPS Location Identified</p>
+                <p><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Severity: High</p>
+                <p><i class="fa-solid fa-user-shield" style="color:var(--accent-color);"></i> Authority Assigned</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- NEW SECTION: NEURAL CORE (BENTO BOX LAYOUT based on Image) -->
+<section id="neural-core" class="reveal">
+    <h2>Powered by <span style="background: linear-gradient(to right, var(--accent-color), #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Neural Core</span></h2>
+    <p class="subtitle">Our proprietary tech stack eliminates bureaucratic delays by automating the triage and dispatch process.</p>
+    
+    <div class="bento-grid">
+        <!-- Main Large Box -->
+        <div class="bento-card bento-large liquid-glass">
+            <i class="fa-solid fa-eye main-icon"></i>
+            <h3>Computer Vision Triage</h3>
+            <p>Upload a photo of damaged infrastructure. Our deep learning model segments the image, estimates repair cost, measures pothole depth via stereoscopic analysis, and flags urgent life-safety hazards instantly.</p>
+            <a href="#" class="bento-link">Explore Vision Tech <i class="fa-solid fa-arrow-right"></i></a>
+            <i class="fa-solid fa-microchip bento-bg-icon"></i>
+        </div>
+        
+        <!-- Top Right Box -->
+        <div class="bento-card bento-top-right liquid-glass">
+            <i class="fa-solid fa-location-crosshairs main-icon" style="color: #ec4899; background: rgba(236, 72, 153, 0.15);"></i>
+            <h3>Hyper-Local GIS</h3>
+            <p>Automatic extraction of EXIF coordinate data binds reports to municipal zoning maps flawlessly.</p>
+        </div>
+        
+        <!-- Bottom Right Left (Speed) -->
+        <div class="bento-card bento-bottom-left liquid-glass">
+            <i class="fa-solid fa-bolt main-icon"></i>
+            <h3>95% Faster</h3>
+            <p>Resolution Time</p>
+        </div>
+
+        <!-- Bottom Right Right (Security) -->
+        <div class="bento-card bento-bottom-right liquid-glass">
+            <i class="fa-solid fa-shield-halved main-icon"></i>
+            <h3>100% Secure</h3>
+            <p>Anonymized Data</p>
+        </div>
+    </div>
+</section>
+
+<!-- EXPANDED FEATURES SECTION -->
+<section id="features" class="liquid-glass reveal">
+    <h2>Complete Platform Features</h2>
+    <p class="subtitle">An expanded suite of civic tools designed for the modern citizen and responsive municipal workforce.</p>
+    <div class="feature-grid">
+        <div class="feature-card liquid-glass">
+            <i class="fa-solid fa-camera"></i>
+            <h3>Automated Classification</h3>
+            <p>Deep learning computer vision detects pothole depth, trash volume, or structural cracks in fractions of a second.</p>
+        </div>
+        <div class="feature-card liquid-glass">
+            <i class="fa-solid fa-microphone-lines"></i>
+            <h3>Voice Description Engine</h3>
+            <p>Real-time speech transcription lets users easily voice report details hands-free while on site.</p>
+        </div>
+        <div class="feature-card liquid-glass">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <h3>Precision Geospatial Tagging</h3>
+            <p>Auto-captured GPS coordinates cross-reference land registries to pin down exact target addresses.</p>
+        </div>
+        <div class="feature-card liquid-glass">
+            <i class="fa-solid fa-chart-line"></i>
+            <h3>Transparent Dashboard</h3>
+            <p>Track reported complaints through a live timeline update mechanism from processing to repair resolution.</p>
+        </div>
+        <!-- NEW FEATURE 1 -->
+        <div class="feature-card liquid-glass">
+            <i class="fa-solid fa-medal"></i>
+            <h3>Citizen Rewards Program</h3>
+            <p>Earn civic points and digital badges for submitting verified reports that help improve your community's safety.</p>
+        </div>
+        <!-- NEW FEATURE 2 -->
+        <div class="feature-card liquid-glass">
+            <i class="fa-solid fa-wifi"></i>
+            <h3>Offline Sync Mode</h3>
+            <p>No signal? No problem. Record issues offline; the app will automatically upload your cache when connectivity returns.</p>
+        </div>
+    </div>
+</section>
+
+<!-- NEW SECTION: HOW IT WORKS (WORKFLOW) -->
+<section id="workflow" class="reveal">
+    <h2>How Issue Routing Works</h2>
+    <p class="subtitle">From the moment you tap submit, our automated system takes over to ensure rapid deployment.</p>
+    
+    <div class="workflow-container">
+        <div class="step">
+            <div class="step-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+            <h4>1. Capture & Report</h4>
+            <p>Snap a picture of the issue using your mobile device.</p>
+        </div>
+        <div class="step">
+            <div class="step-icon"><i class="fa-solid fa-brain"></i></div>
+            <h4>2. AI Triage</h4>
+            <p>Neural Core assigns priority based on severity analysis.</p>
+        </div>
+        <div class="step">
+            <div class="step-icon"><i class="fa-solid fa-truck-fast"></i></div>
+            <h4>3. Smart Dispatch</h4>
+            <p>Ticket is routed directly to the correct city department.</p>
+        </div>
+        <div class="step">
+            <div class="step-icon"><i class="fa-solid fa-check-double"></i></div>
+            <h4>4. Rapid Resolution</h4>
+            <p>Crew fixes the issue and updates the public dashboard.</p>
+        </div>
+    </div>
+</section>
+
+<!-- REAL CHARTS / ANALYTICS SECTION -->
+<section id="analytics" class="liquid-glass reveal">
+    <h2>Live City Analytics</h2>
+    <p class="subtitle">Real-time data on civic improvements powered by AI.</p>
+    <div class="charts-grid">
+        <div class="chart-container liquid-glass">
+            <h3>Reports by Category</h3>
+            <canvas id="categoryChart"></canvas>
+        </div>
+        <div class="chart-container liquid-glass">
+            <h3>Resolution Trends (Last 6 Months)</h3>
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- NEW SECTION: INTEGRATIONS -->
+<section id="integrations" class="reveal">
+    <h2>Enterprise Integrations</h2>
+    <p class="subtitle">Seamlessly connects with the municipal software your city already relies on.</p>
+    <div class="integrations-marquee">
+        <div class="integration-pill liquid-glass">
+            <i class="fa-solid fa-earth-americas"></i> ArcGIS
+        </div>
+        <div class="integration-pill liquid-glass">
+            <i class="fa-solid fa-city"></i> Cityworks
+        </div>
+        <div class="integration-pill liquid-glass">
+            <i class="fa-solid fa-database"></i> SAP S/4HANA
+        </div>
+        <div class="integration-pill liquid-glass">
+            <i class="fa-solid fa-server"></i> Oracle Cloud
+        </div>
+        <div class="integration-pill liquid-glass">
+            <i class="fa-solid fa-envelope-open-text"></i> Zendesk
+        </div>
+    </div>
+</section>
+
+<!-- TECHNOLOGY SECTION -->
+<section id="technology" class="liquid-glass side-title reveal">
+    <h2>AI Technology Behind the System</h2>
+    <p>
+        At the core of the Civic Platform lies a state-of-the-art vision and text architecture. When you upload a picture, our visual CNN (Convolutional Neural Network) segments the scene to find targeted hazards (e.g. broken asphalt vs simple debris) and correlates that image with historical database items.
+    </p>
+    <p>
+        In parallel, natural language models process voice-to-text transcripts, mining context indicators to generate urgency priority levels automatically. A custom municipal dashboard aggregates these inputs to show thermal heatmaps of systemic urban decay, allowing municipal crews to target prevention programs preemptively.
+    </p>
+</section>
+
+<!-- FAQ SECTION -->
+<section id="faq" class="reveal">
+    <h2>Frequently Asked Questions</h2>
+    <p class="subtitle">Everything you need to know about how our AI systems support smart city maintenance.</p>
+    
+    <div class="accordion-container">
+        <div class="accordion-item liquid-glass active">
+            <div class="accordion-header">
+                <span>How does the AI determine report priority?</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="accordion-content" style="max-height: 400px; padding-bottom: 15px;">
+                <p>Our custom AI vision model parses uploaded images to detect specific parameters, like pothole size or water accumulation depth. Based on hazard classes, it calculates priority indices (Low, Medium, High) to route life-threatening issues first.</p>
+            </div>
+        </div>
+        
+        <div class="accordion-item liquid-glass">
+            <div class="accordion-header">
+                <span>What if the AI makes a categorization mistake?</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="accordion-content">
+                <p>Every report has a built-in human verification step. Municipal queue managers can instantly re-categorize or adjust priority tags with a single click, which in turn helps retrain the AI models for future accuracy.</p>
+            </div>
+        </div>
+        
+        <div class="accordion-item liquid-glass">
+            <div class="accordion-header">
+                <span>Can I file reports without sharing my exact GPS coords?</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="accordion-content">
+                <p>Yes, you can manually type a nearby landmark, street name, or intersection instead of utilizing automated GPS lock. However, GPS coordinates speed up crew routing accuracy.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA SECTION -->
+<section class="cta liquid-glass reveal" id="cta">
+    <h2>Help Build Smarter Cities</h2>
+    <p>Join thousands of active residents who are using intelligent civic tools to protect, repair, and clean public infrastructure spaces.</p>
+    <a class="btn cta-button" href="index_2.html"><i class="fa-solid fa-bolt"></i> Launch Report Center</a>
+</section>
+
+<!-- FLOATING BOTTOM PILL BAR -->
+<div class="floating-pill-bar">
+    <a href="#home" class="pill-item active-pill">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+    </a>
+    <a href="index_2.html" class="pill-item">
+        <i class="fa-solid fa-file-waveform"></i>
+        <span>Report Issue</span>
+    </a>
+    <a href="admin.html" class="pill-item">
+        <i class="fa-solid fa-shield"></i>
+        <span>Admin Board</span>
+    </a>
+</div>
+
+<footer class="reveal">
+    <p>© 2026 AI Civic Issue Reporting Platform. Built for a smarter tomorrow.</p>
+</footer>
+
+<script>
+    // =========================================================
+    // SCROLL REVEAL ANIMATIONS (Intersection Observer)
+    // =========================================================
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                revealObserver.unobserve(entry.target); 
+            }
+        });
+    }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+    
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // =========================================================
+    // REAL-TIME SYNCHRONIZED STORAGE DATA MANAGEMENT
+    // =========================================================
+    // Default initial datasets matching the specified category distribution and trends
+    const defaultCivicData = {
+        categories: {
+            'Potholes': 45,
+            'Waste': 25,
+            'Streetlights': 15,
+            'Water Leak': 10,
+            'Other': 5
+        },
+        trends: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            reported: [120, 190, 150, 220, 180, 250],
+            resolved: [100, 170, 140, 200, 190, 230]
+        }
+    };
+
+    function loadCivicData() {
+        // Load base default/saved data structure
+        let data = JSON.parse(JSON.stringify(defaultCivicData));
+        const saved = localStorage.getItem('civic_platform_data');
+        if (saved) {
+            try {
+                data = JSON.parse(saved);
+            } catch (e) {}
+        }
+
+        // Dynamically fetch and parse active complaints or tickets from localStorage
+        const potentialKeys = ['complaints', 'tickets', 'reports', 'civic_reports'];
+        let allTickets = [];
+        
+        for (const key of potentialKeys) {
+            const raw = localStorage.getItem(key);
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        allTickets = allTickets.concat(parsed);
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // Deduplicate tickets by ID to ensure counting is mathematically accurate
+        const seenIds = new Set();
+        const uniqueTickets = [];
+        for (const t of allTickets) {
+            const id = t.id || t.ticketId || t.complaintId || t.complaintIdString || JSON.stringify(t);
+            if (!seenIds.has(id)) {
+                seenIds.add(id);
+                uniqueTickets.push(t);
+            }
+        }
+
+        // If active live database items exist, dynamically override the category distribution and live month metrics
+        if (uniqueTickets.length > 0) {
+            const categories = {
+                'Potholes': 0,
+                'Waste': 0,
+                'Streetlights': 0,
+                'Water Leak': 0,
+                'Other': 0
+            };
+
+            let resolvedCount = 0;
+            let reportedCount = uniqueTickets.length;
+
+            for (const t of uniqueTickets) {
+                // Read type/category
+                const catStr = (t.category || t.type || t.incidentType || t.incidentDetails || t.complaintType || t.title || '').toLowerCase();
+                
+                // Read status
+                const statusStr = (t.status || t.currentStatus || t.state || '').toLowerCase();
+                const isResolved = statusStr.includes('resolve') || statusStr.includes('fix') || statusStr.includes('done') || statusStr.includes('complete');
+                if (isResolved) {
+                    resolvedCount++;
+                }
+
+                // Match with robust category keywords
+                if (catStr.includes('pothole') || catStr.includes('road') || catStr.includes('asphalt') || catStr.includes('street damage') || catStr.includes('crack')) {
+                    categories['Potholes']++;
+                } else if (catStr.includes('garbage') || catStr.includes('waste') || catStr.includes('trash') || catStr.includes('debris') || catStr.includes('sanitation') || catStr.includes('litter')) {
+                    categories['Waste']++;
+                } else if (catStr.includes('light') || catStr.includes('lamp') || catStr.includes('street-light') || catStr.includes('streetlight') || catStr.includes('broken street')) {
+                    categories['Streetlights']++;
+                } else if (catStr.includes('water') || catStr.includes('leak') || catStr.includes('flood') || catStr.includes('flooding') || catStr.includes('drain') || catStr.includes('sewer') || catStr.includes('drainage')) {
+                    categories['Water Leak']++;
+                } else {
+                    categories['Other']++;
+                }
+            }
+
+            data.categories = categories;
+
+            // Reflect live incident quantities dynamically in the trend line graph for the most recent tracking period (June/Last Month)
+            data.trends.reported[5] = reportedCount;
+            data.trends.resolved[5] = resolvedCount;
+        }
+
+        return data;
+    }
+
+    // =========================================================
+    // CHART.JS INITIALIZATION & THEME HANDLING
+    // =========================================================
+    let categoryChartInstance = null;
+    let trendChartInstance = null;
+
+    function getChartThemeColors() {
+        const isDark = document.body.classList.contains('dark-theme');
+        return {
+            textColor: isDark ? '#f3f4f6' : '#111827',
+            gridColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+            tooltipBg: isDark ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)'
+        };
+    }
+
+    function initCharts() {
+        const colors = getChartThemeColors();
+        const data = loadCivicData();
+        
+        // 1. Doughnut Chart (Categories)
+        const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+        categoryChartInstance = new Chart(ctxCategory, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data.categories),
+                datasets: [{
+                    data: Object.values(data.categories),
+                    backgroundColor: ['#4f46e5', '#ec4899', '#10b981', '#3b82f6', '#f59e0b'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: colors.textColor, font: { family: 'Poppins' } } },
+                    tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.textColor, bodyColor: colors.textColor }
+                }
+            }
+        });
+
+        // 2. Line Chart (Trends)
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        trendChartInstance = new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: data.trends.labels,
+                datasets: [
+                    {
+                        label: 'Reported',
+                        data: data.trends.reported,
+                        borderColor: '#ec4899',
+                        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Resolved',
+                        data: data.trends.resolved,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor } },
+                    x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor } }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { color: colors.textColor, font: { family: 'Poppins' } } },
+                    tooltip: { mode: 'index', intersect: false, backgroundColor: colors.tooltipBg, titleColor: colors.textColor, bodyColor: colors.textColor }
+                }
+            }
+        });
+    }
+
+    function refreshChartsWithLiveValues() {
+        if (!categoryChartInstance || !trendChartInstance) return;
+        const data = loadCivicData();
+        const colors = getChartThemeColors();
+
+        // Update categories chart structure
+        categoryChartInstance.data.labels = Object.keys(data.categories);
+        categoryChartInstance.data.datasets[0].data = Object.values(data.categories);
+        categoryChartInstance.options.plugins.legend.labels.color = colors.textColor;
+        categoryChartInstance.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+        categoryChartInstance.options.plugins.tooltip.titleColor = colors.textColor;
+        categoryChartInstance.options.plugins.tooltip.bodyColor = colors.textColor;
+        categoryChartInstance.update();
+
+        // Update trends chart structure
+        trendChartInstance.data.labels = data.trends.labels;
+        trendChartInstance.data.datasets[0].data = data.trends.reported;
+        trendChartInstance.data.datasets[1].data = data.trends.resolved;
+        trendChartInstance.options.scales.x.ticks.color = colors.textColor;
+        trendChartInstance.options.scales.y.ticks.color = colors.textColor;
+        trendChartInstance.options.scales.x.grid.color = colors.gridColor;
+        trendChartInstance.options.scales.y.grid.color = colors.gridColor;
+        trendChartInstance.options.plugins.legend.labels.color = colors.textColor;
+        trendChartInstance.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+        trendChartInstance.options.plugins.tooltip.titleColor = colors.textColor;
+        trendChartInstance.options.plugins.tooltip.bodyColor = colors.textColor;
+        trendChartInstance.update();
+    }
+
+    document.addEventListener('DOMContentLoaded', initCharts);
+
+    // REAL-TIME BROADCAST SYNCHRONIZATION EVENT LISTENER
+    window.addEventListener('storage', (e) => {
+        // Intercept changes on any active complaint metrics inside the browser context
+        if (e.key === 'complaints' || e.key === 'tickets' || e.key === 'reports' || e.key === 'civic_reports' || e.key === 'civic_platform_data') {
+            refreshChartsWithLiveValues();
+        }
+    });
+
+    // =========================================================
+    // AUDIO SYNTHESIS
+    // =========================================================
+    let audioCtx = null;
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    document.body.addEventListener('click', initAudio, { once: true });
+
+    function playSuccessSound() {
+        if (!audioCtx) initAudio();
+        try {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine'; 
+            
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.15);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+            
+            gain.gain.setValueAtTime(0, now + 0.15);
+            gain.gain.linearRampToValueAtTime(0.3, now + 0.17);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+            osc.connect(gain); 
+            gain.connect(audioCtx.destination);
+            osc.start(now); 
+            osc.stop(now + 0.45);
+        } catch(e) {}
+    }
+
+    // =========================================================
+    // EXPANDABLE SEARCH LOGIC
+    // =========================================================
+    const searchBtn = document.getElementById('searchBtn');
+    const navActionsPill = document.getElementById('navActionsPill');
+    const searchInput = document.getElementById('searchInput');
+    const toastNotification = document.getElementById('toastNotification');
+
+    searchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = navActionsPill.classList.contains('expanded');
+        
+        if (!isExpanded) {
+            navActionsPill.classList.add('expanded');
+            setTimeout(() => searchInput.focus(), 150);
+        } else {
+            const query = searchInput.value.trim();
+            if (query !== "") {
+                triggerSearchNotification(query);
+            } else {
+                navActionsPill.classList.remove('expanded');
+            }
+        }
+    });
+
+    navActionsPill.addEventListener('click', (e) => e.stopPropagation());
+
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const query = searchInput.value.trim();
+            if (query !== "") triggerSearchNotification(query);
+        }
+    });
+
+    document.addEventListener('click', () => {
+        if (navActionsPill.classList.contains('expanded')) {
+            navActionsPill.classList.remove('expanded');
+            searchInput.value = '';
+        }
+    });
+
+    function triggerSearchNotification(query) {
+        toastNotification.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Searching for: "${query}"`;
+        toastNotification.classList.add('show');
+        
+        playSuccessSound(); 
+        
+        navActionsPill.classList.remove('expanded');
+        searchInput.value = '';
+        
+        setTimeout(() => {
+            toastNotification.classList.remove('show');
+        }, 3000);
+    }
+
+    // =========================================================
+    // SMOOTH SCROLL BOTTOM PILL ACTIVE STATES
+    // =========================================================
+    const pillItems = document.querySelectorAll('.floating-pill-bar .pill-item');
+    const sections = document.querySelectorAll('section[id], header[id]');
+
+    window.addEventListener('scroll', () => {
+        let currentSection = '';
+        sections.forEach(sec => {
+            const sectionTop = sec.offsetTop;
+            if (pageYOffset >= (sectionTop - 350)) {
+                currentSection = sec.getAttribute('id');
+            }
+        });
+
+        pillItems.forEach(item => {
+            item.classList.remove('active-pill');
+            const href = item.getAttribute('href');
+            if (href === `#${currentSection}` || (currentSection === '' && href==='#home')) {
+                item.classList.add('active-pill');
+            }
+        });
+    });
+
+    // =========================================================
+    // INTERACTIVE ACCORDION LOGIC
+    // =========================================================
+    const accordionHeaders = document.querySelectorAll('.accordion-header');
+    accordionHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const currentItem = header.parentElement;
+            const isActive = currentItem.classList.contains('active');
+            
+            document.querySelectorAll('.accordion-item').forEach(item => {
+                item.classList.remove('active');
+                item.querySelector('.accordion-content').style.maxHeight = null;
+                item.querySelector('.accordion-content').style.paddingBottom = "0";
+            });
+            
+            if (!isActive) {
+                currentItem.classList.add('active');
+                currentItem.querySelector('.accordion-content').style.maxHeight = "400px";
+                currentItem.querySelector('.accordion-content').style.paddingBottom = "15px";
+            }
+        });
+    });
+
+    // =========================================================
+    // THEME TOGGLE WITH LOCAL STORAGE & SPREAD ANIMATION
+    // =========================================================
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    
+    if (document.body.classList.contains('dark-theme')) {
+        themeToggleBtn.querySelector('i').className = 'fa-solid fa-sun';
+    } else {
+        themeToggleBtn.querySelector('i').className = 'fa-solid fa-moon';
+    }
+    
+    themeToggleBtn.addEventListener('click', (e) => {
+        const toggleTheme = () => {
+            document.body.classList.toggle('dark-theme');
+            const currentlyDark = document.body.classList.contains('dark-theme');
+            themeToggleBtn.querySelector('i').className = currentlyDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            localStorage.setItem('civic_theme_pref', currentlyDark ? 'dark' : 'light');
+            refreshChartsWithLiveValues(); 
+        };
+
+        if (!document.startViewTransition) {
+            toggleTheme();
+            return;
+        }
+
+        const rect = themeToggleBtn.getBoundingClientRect();
+        const x = (e && e.clientX !== undefined && e.clientX !== 0) ? e.clientX : rect.left + rect.width / 2;
+        const y = (e && e.clientY !== undefined && e.clientY !== 0) ? e.clientY : rect.top + rect.height / 2;
+        
+        const endRadius = Math.hypot(
+            Math.max(x, window.innerWidth - x), 
+            Math.max(y, window.innerHeight - y)
+        );
+
+        document.documentElement.classList.add('theme-switching');
+
+        const transition = document.startViewTransition(() => {
+            toggleTheme();
+        });
+
+        transition.ready.then(() => {
+            document.documentElement.classList.remove('theme-switching');
+            document.documentElement.animate(
+                {
+                    clipPath: [
+                        `circle(0px at ${x}px ${y}px)`,
+                        `circle(${endRadius}px at ${x}px ${y}px)`
+                    ],
+                },
+                {
+                    duration: 650, 
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    pseudoElement: '::view-transition-new(root)',
+                }
+            );
+        }).catch(() => {
+            document.documentElement.classList.remove('theme-switching');
+        });
+    });
+
+</script>
+
+</body>
+</html>

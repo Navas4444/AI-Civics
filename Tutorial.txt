@@ -1,0 +1,17 @@
+Run this cmd inside AI Categorizer
+
+python -m uvicorn app.main:app --reload
+
+For now use 
+
+phone.no: +91 whatever number
+OTP: shows at right corner when you enter otp
+
+in admin panel 
+
+As admin use this
+
+Username:Admin
+Password:kd84k58x
+
+or observe as citizen
